@@ -35,6 +35,7 @@ class MemberFixtures extends Fixture
             'admin'
         ));
         $admin->setUsername('admin');
+        $admin->setRoles(['ROLE_ADMIN']);
         $manager->persist($admin);
 
         $manager->flush();
