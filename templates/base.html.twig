@@ -1,17 +1,66 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        {% block stylesheets %}
-            {{ encore_entry_link_tags('app') }}
-        {% endblock %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>
+        {% if block('title') is defined %}
+            {% set _title = block('title') %}
+            {% if _title is not empty %}
+                {{ _title|raw }} |
+            {% endif %}
+        {% endif %}
+        {# TODO Update template name #}
+        Template
+    </title>
 
-        {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
-        {% endblock %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+    {% block stylesheets %}
+        {{ encore_entry_link_tags('app') }}
+    {% endblock %}
+
+    {% block javascripts %}
+        {{ encore_entry_script_tags('app') }}
+    {% endblock %}
+</head>
+<body class="bg-gray-300">
+<div class="p-4 bg-blue-600 justify-between flex flex-row shadow-md">
+    <div class="text-4xl font-medium my-auto">
+        <a href="{{ path('home_page') }}">Template</a>
+    </div>
+    <div class="float-right">
+        <div class="flex flex-row">
+
+            {% if app.user %}
+                <div class="p-4 italic">{{ app.user.userIdentifier }}</div>
+
+                {% if is_granted('ROLE_ADMIN') %}
+                    <a href="{{ path('admin') }}">
+                        <div class="p-4 hover:text-white">Admin</div>
+                    </a>
+                {% endif %}
+
+                <a href="{{ path('app_logout') }}">
+                    <div class="p-4 hover:text-white">Log out</div>
+                </a>
+            {% else %}
+                <a href="{{ path('app_login') }}">
+                    <div class="p-4 hover:text-white">Log in</div>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% for type, messages in app.session.flashbag.all() %}
+    {% for message in messages %}
+        <div class="alert alert-{{ type }} flex flex-row items-center justify-between">
+            <p>{{ message|trans|raw }}</p>
+            <button type="button" class="float-right text-2xl" onclick="this.closest('div').style.display='none'">
+                &times;
+            </button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{% block body %}{% endblock %}
+</body>
 </html>

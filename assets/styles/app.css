@@ -4,6 +4,22 @@
 
 @import "tailwindcss/utilities";
 
-body {
-    background-color: lightgray;
+.alert {
+    @apply m-2 px-4 py-3 leading-normal;
+}
+
+.alert-info {
+    @apply text-blue-700 bg-blue-100
+}
+
+.alert-success {
+    @apply text-green-700 bg-green-100
+}
+
+.alert-warning {
+    @apply text-yellow-700 bg-yellow-100
+}
+
+.alert-danger {
+    @apply text-red-700 bg-red-100
 }
