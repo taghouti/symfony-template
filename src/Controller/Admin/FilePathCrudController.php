@@ -4,6 +4,10 @@ namespace App\Controller\Admin;
 
 use App\Entity\FilePath;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use Symfony\Component\DomCrawler\Field\FileFormField;
 
 class FilePathCrudController extends AbstractCrudController
 {
@@ -12,14 +16,17 @@ class FilePathCrudController extends AbstractCrudController
         return FilePath::class;
     }
 
-    /*
     public function configureFields(string $pageName): iterable
     {
-        return [
-            IdField::new('id'),
-            TextField::new('title'),
-            TextEditorField::new('description'),
-        ];
+        yield TextField::new('name');
+        yield ChoiceField::new('type')->setChoices([
+            'cve' => 'CVE',
+            'data' => 'DATA',
+        ]);
+        yield TextField::new('path')->setTemplatePath('easy_admin/file.html.twig');
+        yield ImageField::new('path')
+            ->setBasePath('uploads')
+            ->setUploadDir('public/uploads')
+            ->setUploadedFileNamePattern('[slug]-[contenthash].[extension]')->hideOnIndex();
     }
-    */
 }

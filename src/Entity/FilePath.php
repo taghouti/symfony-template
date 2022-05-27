@@ -49,7 +49,13 @@ class FilePath
 
     public function getPath(): ?string
     {
-        return $this->path;
+        if (!$this->path) {
+            return null;
+        }
+        if (str_contains($this->path, '/')) {
+            return $this->path;
+        }
+        return sprintf('/uploads/%s' , $this->path);
     }
 
     public function setPath(string $path): self
