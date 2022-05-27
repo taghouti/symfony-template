@@ -2,6 +2,10 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\CpeList;
+use App\Entity\File;
+use App\Entity\FileField;
+use App\Entity\Member;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
@@ -25,7 +29,9 @@ class DashboardController extends AbstractDashboardController
     public function configureMenuItems(): iterable
     {
         yield MenuItem::linktoDashboard('Dashboard', 'fa fa-home');
-        yield MenuItem::linktoDashboard('Files', 'fa fa-file');
-        // yield MenuItem::linkToCrud('The Label', 'fas fa-list', EntityClass::class);
+        yield MenuItem::linkToCrud('Files', 'fa fa-file', File::class);
+        yield MenuItem::linkToCrud('CPE', 'fa fa-key', CpeList::class);
+        yield MenuItem::linkToCrud('Fields', 'fa fa-keyboard', FileField::class);
+        yield MenuItem::linkToCrud('Members', 'fa fa-users', Member::class);
     }
 }
