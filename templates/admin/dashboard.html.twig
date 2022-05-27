@@ -1,0 +1,24 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+{% block content_title %}Dashboard{% endblock %}
+{% block page_actions %}
+{% endblock %}
+
+{% block main %}
+    <style>
+        .content-wrapper {
+            background: white;
+            margin-top: 10px;
+            min-height: 80%;
+            padding-top: 8px;
+        }
+    </style>
+    <table class="datagrid">
+        <tbody>
+        <tr>
+            <td>
+                <a class="btn btn-primary" href="...">Update database</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+{% endblock %}
