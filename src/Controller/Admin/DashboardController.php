@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Config;
 use App\Entity\CpeList;
 use App\Entity\File;
 use App\Entity\FileField;
@@ -39,6 +40,7 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToCrud('Import', 'fa fa-arrow-up', Import::class);
         yield MenuItem::linkToCrud('Export', 'fa fa-arrow-down', Export::class);
         yield MenuItem::linkToCrud('Members', 'fa fa-users', Member::class);
+        yield MenuItem::linkToCrud('Configs', 'fa fa-cog', Config::class);
         yield MenuItem::linkToLogout('Logout', 'fa fa-sign-out');
 
     }
