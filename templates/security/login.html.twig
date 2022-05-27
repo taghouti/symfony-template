@@ -1,10 +1,6 @@
+{% extends 'base.html.twig' %}
 {% block title %}
-<div id="home-img">
-    <img src="https://imh-groupe.com/wp-content/uploads/2019/10/imh-groupe-logo-siteweb.png">
-</div>
-<div id="home-title">
-    IMH NVD GENERATOR
-</div>
+
 {% endblock %}
 
 {% block body %}
@@ -12,6 +8,10 @@
         #home-img {
             margin-top: 30px;
             text-align: center;
+            width: 100%;
+        }
+        #home-img img {
+            display: inline;
         }
         #home-title {
             color: #7f7f7f;
@@ -129,6 +129,12 @@
             background: #3c4d6d;
         }
     </style>
+    <div id="home-img">
+        <img src="https://imh-groupe.com/wp-content/uploads/2019/10/imh-groupe-logo-siteweb.png">
+    </div>
+    <div id="home-title">
+        IMH NVD GENERATOR
+    </div>
     <form method="post">
         {% if error %}
             <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>

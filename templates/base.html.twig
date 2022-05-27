@@ -55,21 +55,11 @@
             background-color: #04AA6D;
             color: white;
         }
+
+        .main-header{grid-area:header;padding-bottom: 30px}
     </style>
 </head>
 <body>
-
-<div class="topnav">
-    {% if app.user %}
-        <a href="{{ path('home_page') }}">Home</a>
-        {% if is_granted('ROLE_ADMIN') %}
-            <a href="{{ path('admin') }}">CPE</a>
-        {% endif %}
-        <a href="{{ path('app_logout') }}">Log out</a>
-    {% else %}
-        <a href="{{ path('app_login') }}">Log in</a>
-    {% endif %}
-</div>
 
 {% for type, messages in app.session.flashbag.all() %}
     {% for message in messages %}
