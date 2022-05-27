@@ -23,10 +23,10 @@ class FilePathCrudController extends AbstractCrudController
             'cve' => 'CVE',
             'data' => 'DATA',
         ]);
-        yield TextField::new('path')->setTemplatePath('easy_admin/file.html.twig');
+        yield TextField::new('path')->setTemplatePath('easy_admin/file.html.twig')->onlyOnIndex();
         yield ImageField::new('path')
             ->setBasePath('uploads')
             ->setUploadDir('public/uploads')
-            ->setUploadedFileNamePattern('[slug]-[contenthash].[extension]')->hideOnIndex();
+            ->setUploadedFileNamePattern('[slug]-[contenthash].[extension]')->onlyWhenCreating();
     }
 }
