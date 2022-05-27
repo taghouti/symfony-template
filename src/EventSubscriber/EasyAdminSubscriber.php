@@ -4,17 +4,21 @@ namespace App\EventSubscriber;
 
 use App\Entity\File;
 use App\Entity\FileField;
-use App\Entity\FilePath;
+use App\Entity\Import;
+use App\Entity\Export;
 use App\Entity\Member;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityUpdatedEvent;
+use http\Exception\BadQueryStringException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Exception;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Worksheet;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class EasyAdminSubscriber implements EventSubscriberInterface
 {
@@ -36,7 +40,8 @@ class EasyAdminSubscriber implements EventSubscriberInterface
         return [
             BeforeEntityPersistedEvent::class => ['addMember'],
             BeforeEntityUpdatedEvent::class => ['updateMember'],
-            BeforeEntityPersistedEvent::class => ['addFilePath'],
+            BeforeEntityPersistedEvent::class => ['addImport'],
+            BeforeEntityPersistedEvent::class => ['addExport'],
         ];
     }
 
@@ -60,14 +65,24 @@ class EasyAdminSubscriber implements EventSubscriberInterface
         $this->setPassword($entity);
     }
 
-    public function addFilePath(BeforeEntityPersistedEvent $event)
+    public function addImport(BeforeEntityPersistedEvent $event)
     {
         $entity = $event->getEntityInstance();
 
-        if (!($entity instanceof FilePath)) {
+        if (!($entity instanceof Import)) {
             return;
         }
-        $this->setPath($entity);
+        $this->setImportPath($entity);
+    }
+
+    public function addExport(BeforeEntityPersistedEvent $event)
+    {
+        $entity = $event->getEntityInstance();
+
+        if (!($entity instanceof Export)) {
+            return;
+        }
+        $this->setExportPath($entity);
     }
 
     /**
@@ -88,9 +103,9 @@ class EasyAdminSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param FilePath $entity
+     * @param Import $entity
      */
-    public function setPath(FilePath $entity): void
+    public function setImportPath(Import $entity): void
     {
         $path = $entity->getPath();
         $entity->setPath($path);
@@ -99,14 +114,22 @@ class EasyAdminSubscriber implements EventSubscriberInterface
         if (strtolower($entity->getType()) == 'data') $this->import($path);
     }
 
-    public function import($path) {
+    /**
+     * @param Export $entity
+     */
+    public function setExportPath(Export $entity): void
+    {
+        if (strtolower($entity->getType()) == 'data') $this->export($entity);
+    }
+
+    public function import($path)
+    {
         $spreadsheet = IOFactory::load(
             $this->parameterBag->get('kernel.project_dir') . "/public$path"
         );
         $sheetData = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
         $query = "INSERT INTO file VALUES ";
-        foreach ($sheetData as $rowIndex => $currentRow)
-        {
+        foreach ($sheetData as $rowIndex => $currentRow) {
             if ($rowIndex == 1) continue;
             $query .= " (null";
             $fields = $this->entityManager->getRepository(FileField::class)->findAll();
@@ -119,5 +142,43 @@ class EasyAdminSubscriber implements EventSubscriberInterface
         $this->entityManager->flush();
 
     }
+
+    public function export(Export $entity)
+    {
+        $spreadsheet = new Spreadsheet();
+        $postfix = uniqid();
+        $file = '/uploads/' . $entity->getName() . '-' .
+            $postfix . '.xlsx';
+        $path = $this->parameterBag->get('kernel.project_dir') .
+            '/public/uploads/' . $entity->getName() . '-' .
+            $postfix . '.xlsx';
+        /* @var $sheet Worksheet */
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setCellValue('A1', 'Hello World !');
+        $fields = $this->entityManager->getRepository(FileField::class)->findAll();
+        foreach ($fields as $index => $field) {
+            $sheet->setCellValue(chr($index + 65) . "1", $field->getLabel());
+        }
+        $rows = $this->entityManager->getRepository(File::class)->findAll();
+        foreach ($rows as $rowIndex => $row) {
+            foreach ($fields as $index => $field) {
+                $key = "get" . ucfirst($field->getKey());
+                $key = str_replace('_', '', ucwords($key, '_'));
+                $sheet->setCellValue(chr($index + 65) . ($rowIndex + 2), $row->$key());
+            }
+        }
+        $sheet->setTitle("CPE LIST");
+        $writer = new Xlsx($spreadsheet);
+        try {
+            $writer->save($path);
+            $entity->setPath($file);
+            $this->entityManager->persist($entity);
+            $this->entityManager->flush();
+        } catch (Exception $e) {
+            throw new BadQueryStringException($e->getMessage());
+        }
+
+    }
+
 
 }
