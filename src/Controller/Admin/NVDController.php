@@ -11,6 +11,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use TypeError;
@@ -22,14 +25,16 @@ class NVDController extends AbstractController
     private ParameterBagInterface $parameterBag;
     private string $nvdFilesPath;
     private SessionInterface $session;
+    private MailerInterface $mailer;
 
-    public function __construct(SessionInterface $session, ParameterBagInterface $parameterBag, HttpClientInterface $client, EntityManagerInterface $entityManager)
+    public function __construct(MailerInterface $mailer, SessionInterface $session, ParameterBagInterface $parameterBag, HttpClientInterface $client, EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
         $this->client = $client;
         $this->parameterBag = $parameterBag;
         $this->nvdFilesPath = $this->parameterBag->get('kernel.project_dir') . "/public/nvd_files/";
         $this->session = $session;
+        $this->mailer = $mailer;
     }
 
     #[Route('/nvd', name: 'nvd')]
@@ -86,7 +91,9 @@ class NVDController extends AbstractController
             foreach ($cvesType as $cveStatus => $cve) {
                 if (is_array($cve) && isset($cve['matching'])) {
                     $version = explode(':', $cve['matching'])[5];
-                    $message .= "A vulnerability $cveStatus detected : $cve[cve] on the $cve[cots] $version with severity Score $cve[base_score]<br>";
+                    $currentMessage = "A vulnerability $cveStatus detected : $cve[cve] on the $cve[cots] $version with severity Score $cve[base_score]<br>";
+                    $message .= $currentMessage;
+                    $this->_sendEmail("[$cve[cve]] A vulnerability $cveStatus detected", $currentMessage);
                 }
             }
         }
@@ -145,6 +152,23 @@ class NVDController extends AbstractController
             'cves' => $cves,
             'parsed' => $parsed
         ];
+    }
+
+    private function _sendEmail($subject, $content): void
+    {
+        $email = (new Email())
+            ->from('nvd@imh-groupe.com')
+            ->to('imed.mh@imh-groupe.com')
+            ->cc('imed.meddeb-hamrouni.external@airbus.com')
+            ->subject($subject)
+            ->text($content);
+
+        try {
+            $this->mailer->send($email);
+            return;
+        } catch (TransportExceptionInterface $e) {
+            return;
+        }
     }
 
     private function _isKernel($cve): bool
