@@ -6,6 +6,7 @@ use App\Entity\CpeList;
 use App\Entity\File;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
+use JetBrains\PhpStorm\ArrayShape;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -38,18 +39,68 @@ class NVDController extends AbstractController
     }
 
     #[Route('/nvd/check', name: 'nvd_check')]
-    public function check()//: RedirectResponse
+    public function check(): RedirectResponse
     {
-        return null;
+        $cpeList = $this->entityManager->getRepository(CpeList::class)->findAll();
+        $cpesCves = $this->_parseCpes($cpeList)['parsed'];
+        $kernel['creation'] = [];
+        $kernel['update'] = [];
+        $others['creation'] = [];
+        $others['update'] = [];
+        foreach ($cpesCves as $cpeCves) {
+            foreach ($cpeCves as $cveColsData) {
+                /** @var File $currentCve */
+                $currentCve = $this->entityManager->getRepository(File::class)->findOneBy(['cve' => $cveColsData['cve']]);
+                if ($currentCve) {
+                    $currentCveArray = (array)$currentCve;
+                    if ($this->_isKernel($currentCveArray)) {
+                        $kernel['update'][] = $cveColsData;
+                    } else if ($this->_isOthers($currentCveArray)) {
+                        $others['update'][] = $cveColsData;
+                    }
+                    if (
+                        empty($cveColsData['analysis_status']) &&
+                        empty($cveColsData['analysis_date']) &&
+                        empty($cveColsData['applicability_status']) &&
+                        empty($cveColsData['applicability_rationale']) &&
+                        empty($cveColsData['consequence']) &&
+                        empty($cveColsData['operational_impact_level']) &&
+                        empty($cveColsData['cve_condition']) &&
+                        empty($cveColsData['exploit_likelihood'])
+                    ) {
+                        $this->_updateCve($currentCve, $cveColsData);
+                    }
+                } else {
+                    if ($this->_isKernel($cveColsData)) {
+                        $kernel['creation'][] = $cveColsData;
+                    } else if ($this->_isOthers($cveColsData)) {
+                        $others['creation'][] = $cveColsData;
+                    }
+                    $this->_updateCve(new File(), $cveColsData);
+                }
+            }
+        }
+        $message = "";
+        $cvesTypes = ['kernel' => $kernel, 'others' => $others];
+        foreach ($cvesTypes as $cvesType) {
+            foreach ($cvesType as $cveStatus => $cve) {
+                if (is_array($cve) && isset($cve['matching'])) {
+                    $version = explode(':', $cve['matching'])[5];
+                    $message .= "A vulnerability $cveStatus detected : $cve[cve] on the $cve[cots] $version with severity Score $cve[base_score]<br>";
+                }
+            }
+        }
+        if (!empty(trim($message))) {
+            $this->session->getFlashBag()->add('success', $message);
+        }
+        return $this->redirectToRoute('admin');
     }
 
-    #[Route('/nvd/update', name: 'nvd_update')]
-    public function update(): RedirectResponse
+    #[ArrayShape(['errors' => "array", 'cpes' => "mixed", 'cves' => "array", 'parsed' => "array"])] private function _parseCpes($cpes): array
     {
         $parsed = [];
         $cves = [];
         $errors = [];
-        $cpes = $this->entityManager->getRepository(CpeList::class)->findAll();
         foreach ($cpes as $cpe) {
             $path = shell_exec('python3 C:\Users\MSI\Documents\projects\nvdlib\main.py "' . $cpe->getCpe() . '"');
             $path = str_replace(array("\r", "\n"), '', $path);
@@ -88,49 +139,40 @@ class NVDController extends AbstractController
                 $parsed[$cpe][] = $cols;
             }
         }
-        $updated = [];
-        $created = [];
-        $skipped = [];
-        foreach ($parsed as $cpe => $cpeCves) {
-            foreach ($cpeCves as $item) {
-                /** @var File $cve */
-                $cve = $this->entityManager->getRepository(File::class)->findOneBy(['cve' => $item['cve']]);
-                if ($cve) {
-                    if (
-                        empty($item['analysis_status']) &&
-                        empty($item['analysis_date']) &&
-                        empty($item['applicability_status']) &&
-                        empty($item['applicability_rationale']) &&
-                        empty($item['consequence']) &&
-                        empty($item['operational_impact_level']) &&
-                        empty($item['cve_condition']) &&
-                        empty($item['exploit_likelihood'])
-                    ) {
-                        $this->_updateCve($cve, $item);
-                        $updated[$cpe][] = $item;
-                    } else {
-                        $skipped[$cpe][] = $item;
-                    }
-                } else {
-                    $this->_updateCve(new File(), $item);
-                    $created[$cpe][] = $item;
-                }
+        return [
+            'errors' => $errors,
+            'cpes' => $cpes,
+            'cves' => $cves,
+            'parsed' => $parsed
+        ];
+    }
+
+    private function _isKernel($cve): bool
+    {
+        if (!isset($cve['analysis_status']) || ($cve['analysis_status'] != 'Analysis complete')) {
+            if (
+                isset($cve['matching']) && (trim($cve['matching']) == "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
+                isset($cve['base_score']) && ($cve['base_score'] >= 7) &&
+                isset($cve['cve_description']) && (str_contains($cve['cve_description'], 'usb')) &&
+                isset($cve['attack_vector']) && (str_contains($cve['attack_vector'], 'Network') || str_contains($cve['attack_vector'], 'Adjacent'))
+            ) {
+                return true;
             }
         }
-        $message = "";
-        foreach ($errors as $errorKey => $errorMessage) {
-            $message .= "$errorKey : $errorMessage <br>";
+        return false;
+    }
+
+    private function _isOthers($cve): bool
+    {
+        if (!isset($cve['analysis_status']) || ($cve['analysis_status'] != 'Analysis complete')) {
+            if (
+                isset($cve['matching']) && (trim($cve['matching']) != "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
+                isset($cve['base_score']) && ($cve['base_score'] >= 7)
+            ) {
+                return true;
+            }
         }
-        $this->session->getFlashBag()->add('warning', $message);
-        $message = "";
-        foreach ($cpes as $cpe) {
-            $cpe = $cpe->getCpe();
-            $message .= (isset($created[$cpe]) ? "Inserted $cpe : " . (count($created[$cpe]) + 1) . "<br>" : "");
-            $message .= (isset($updated[$cpe]) ? "Updated $cpe : " . (count($updated[$cpe]) + 1) . "<br>" : "");
-            $message .= (isset($skipped[$cpe]) ? "Skipped $cpe : " . (count($created[$cpe]) + 1) . "<br>" : "");
-        }
-        $this->session->getFlashBag()->add('success', $message);
-        return $this->redirectToRoute('admin');
+        return false;
     }
 
     private function _updateCve($cve, $values)
@@ -144,5 +186,61 @@ class NVDController extends AbstractController
         $cve->setCots($values['cots']);
         $this->entityManager->persist($cve);
         $this->entityManager->flush();
+    }
+
+    #[Route('/nvd/update', name: 'nvd_update')]
+    public function update(): RedirectResponse
+    {
+        $cpeList = $this->entityManager->getRepository(CpeList::class)->findAll();
+        $cpeParseResult = $this->_parseCpes($cpeList);
+        $cpesCves = $cpeParseResult['parsed'];
+        $errors = $cpeParseResult['errors'];
+        $updated = [];
+        $created = [];
+        $skipped = [];
+        foreach ($cpesCves as $cpe => $cpeCves) {
+            foreach ($cpeCves as $cveColsData) {
+                /** @var File $currentCve */
+                $currentCve = $this->entityManager->getRepository(File::class)->findOneBy(['cve' => $cveColsData['cve']]);
+                if ($currentCve) {
+                    if (
+                        empty($cveColsData['analysis_status']) &&
+                        empty($cveColsData['analysis_date']) &&
+                        empty($cveColsData['applicability_status']) &&
+                        empty($cveColsData['applicability_rationale']) &&
+                        empty($cveColsData['consequence']) &&
+                        empty($cveColsData['operational_impact_level']) &&
+                        empty($cveColsData['cve_condition']) &&
+                        empty($cveColsData['exploit_likelihood'])
+                    ) {
+                        $this->_updateCve($currentCve, $cveColsData);
+                        $updated[$cpe][] = $cveColsData;
+                    } else {
+                        $skipped[$cpe][] = $cveColsData;
+                    }
+                } else {
+                    $this->_updateCve(new File(), $cveColsData);
+                    $created[$cpe][] = $cveColsData;
+                }
+            }
+        }
+        $message = "";
+        foreach ($errors as $errorKey => $errorMessage) {
+            $message .= "$errorKey : $errorMessage <br>";
+        }
+        if (!empty(trim($message))) {
+            $this->session->getFlashBag()->add('warning', $message);
+        }
+        $message = "";
+        foreach ($cpeList as $cpe) {
+            $cpe = $cpe->getCpe();
+            $message .= (isset($created[$cpe]) ? "Inserted $cpe : " . (count($created[$cpe]) + 1) . "<br>" : "");
+            $message .= (isset($updated[$cpe]) ? "Updated $cpe : " . (count($updated[$cpe]) + 1) . "<br>" : "");
+            $message .= (isset($skipped[$cpe]) ? "Skipped $cpe : " . (count($created[$cpe]) + 1) . "<br>" : "");
+        }
+        if (!empty(trim($message))) {
+            $this->session->getFlashBag()->add('success', $message);
+        }
+        return $this->redirectToRoute('admin');
     }
 }

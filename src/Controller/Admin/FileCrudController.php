@@ -27,7 +27,10 @@ class FileCrudController extends AbstractCrudController
     {
         $fields = $this->entityManager->getRepository(FileField::class)->findAll();
         foreach ($fields as $field) {
-            yield TextField::new($field->getKey())->setLabel($field->getLabel());
+            yield TextField::new($field->getKey())
+                ->setLabel($field->getLabel())
+                ->setSortable(true)
+                ->setTextAlign('center');
         }
     }
 }
