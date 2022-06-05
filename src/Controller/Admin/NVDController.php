@@ -2,8 +2,8 @@
 
 namespace App\Controller\Admin;
 
-use App\Entity\CpeList;
-use App\Entity\File;
+use App\Entity\Cpe;
+use App\Entity\Cve;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
 use JetBrains\PhpStorm\ArrayShape;
@@ -41,7 +41,7 @@ class NVDController extends AbstractController
     #[Route('/nvd/check', name: 'nvd_check')]
     public function check(): RedirectResponse
     {
-        $cpeList = $this->entityManager->getRepository(CpeList::class)->findAll();
+        $cpeList = $this->entityManager->getRepository(Cpe::class)->findAll();
         $cpesCves = $this->_parseCpes($cpeList)['parsed'];
         $kernel['creation'] = [];
         $kernel['update'] = [];
@@ -49,8 +49,8 @@ class NVDController extends AbstractController
         $others['update'] = [];
         foreach ($cpesCves as $cpeCves) {
             foreach ($cpeCves as $cveColsData) {
-                /** @var File $currentCve */
-                $currentCve = $this->entityManager->getRepository(File::class)->findOneBy(['cve' => $cveColsData['cve']]);
+                /** @var Cve $currentCve */
+                $currentCve = $this->entityManager->getRepository(Cve::class)->findOneBy(['cve' => $cveColsData['cve']]);
                 if ($currentCve) {
                     $currentCveArray = (array)$currentCve;
                     if ($this->_isKernel($currentCveArray)) {
@@ -76,7 +76,7 @@ class NVDController extends AbstractController
                     } else if ($this->_isOthers($cveColsData)) {
                         $others['creation'][] = $cveColsData;
                     }
-                    $this->_updateCve(new File(), $cveColsData);
+                    $this->_updateCve(new Cve(), $cveColsData);
                 }
             }
         }
@@ -102,7 +102,7 @@ class NVDController extends AbstractController
         $cves = [];
         $errors = [];
         foreach ($cpes as $cpe) {
-            $path = shell_exec('python3 C:\Users\MSI\Documents\projects\nvdlib\main.py "' . $cpe->getCpe() . '"');
+            $path = shell_exec('python3 C:\Users\MSI\Documents\projects\nvdlib\main.py "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960"');
             $path = str_replace(array("\r", "\n"), '', $path);
             if (!is_file($path)) {
                 $errors[$cpe->getCpe()] = $path;
@@ -191,7 +191,7 @@ class NVDController extends AbstractController
     #[Route('/nvd/update', name: 'nvd_update')]
     public function update(): RedirectResponse
     {
-        $cpeList = $this->entityManager->getRepository(CpeList::class)->findAll();
+        $cpeList = $this->entityManager->getRepository(Cpe::class)->findAll();
         $cpeParseResult = $this->_parseCpes($cpeList);
         $cpesCves = $cpeParseResult['parsed'];
         $errors = $cpeParseResult['errors'];
@@ -200,8 +200,8 @@ class NVDController extends AbstractController
         $skipped = [];
         foreach ($cpesCves as $cpe => $cpeCves) {
             foreach ($cpeCves as $cveColsData) {
-                /** @var File $currentCve */
-                $currentCve = $this->entityManager->getRepository(File::class)->findOneBy(['cve' => $cveColsData['cve']]);
+                /** @var Cve $currentCve */
+                $currentCve = $this->entityManager->getRepository(Cve::class)->findOneBy(['cve' => $cveColsData['cve']]);
                 if ($currentCve) {
                     if (
                         empty($cveColsData['analysis_status']) &&
@@ -219,7 +219,7 @@ class NVDController extends AbstractController
                         $skipped[$cpe][] = $cveColsData;
                     }
                 } else {
-                    $this->_updateCve(new File(), $cveColsData);
+                    $this->_updateCve(new Cve(), $cveColsData);
                     $created[$cpe][] = $cveColsData;
                 }
             }

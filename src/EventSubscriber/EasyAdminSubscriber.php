@@ -2,8 +2,8 @@
 
 namespace App\EventSubscriber;
 
-use App\Entity\File;
-use App\Entity\FileField;
+use App\Entity\Cve;
+use App\Entity\Field;
 use App\Entity\Import;
 use App\Entity\Export;
 use App\Entity\Member;
@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityPersistedEvent;
 use EasyCorp\Bundle\EasyAdminBundle\Event\BeforeEntityUpdatedEvent;
 use http\Exception\BadQueryStringException;
+use JetBrains\PhpStorm\ArrayShape;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Exception;
@@ -23,8 +24,8 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 class EasyAdminSubscriber implements EventSubscriberInterface
 {
 
-    private $entityManager;
-    private $passwordEncoder;
+    private EntityManagerInterface $entityManager;
+    private UserPasswordEncoderInterface $passwordEncoder;
     private ParameterBagInterface $parameterBag;
 
     public function __construct(
@@ -35,7 +36,7 @@ class EasyAdminSubscriber implements EventSubscriberInterface
         $this->parameterBag = $parameterBag;
     }
 
-    public static function getSubscribedEvents()
+    #[ArrayShape([BeforeEntityPersistedEvent::class => "string[]", BeforeEntityUpdatedEvent::class => "string[]"])] public static function getSubscribedEvents(): array
     {
         return [
             BeforeEntityPersistedEvent::class => ['addMember'],
@@ -72,7 +73,11 @@ class EasyAdminSubscriber implements EventSubscriberInterface
         if (!($entity instanceof Import)) {
             return;
         }
-        $this->setImportPath($entity);
+        try {
+            $this->setImportPath($entity);
+        } catch (\Doctrine\DBAL\Exception $e) {
+            dd($e);
+        }
     }
 
     public function addExport(BeforeEntityPersistedEvent $event)
@@ -104,12 +109,13 @@ class EasyAdminSubscriber implements EventSubscriberInterface
 
     /**
      * @param Import $entity
+     * @throws \Doctrine\DBAL\Exception
      */
     public function setImportPath(Import $entity): void
     {
         $this->entityManager->persist($entity);
         $this->entityManager->flush();
-        if (strtolower($entity->getType()) == 'data') $this->import($path);
+        if (strtolower($entity->getType()) == 'cve') $this->import($entity->getPath());
     }
 
     /**
@@ -117,9 +123,12 @@ class EasyAdminSubscriber implements EventSubscriberInterface
      */
     public function setExportPath(Export $entity): void
     {
-        if (strtolower($entity->getType()) == 'data') $this->export($entity);
+        if (strtolower($entity->getType()) == 'cve') $this->export($entity);
     }
 
+    /**
+     * @throws \Doctrine\DBAL\Exception
+     */
     public function import($path)
     {
         $spreadsheet = IOFactory::load(
@@ -130,7 +139,7 @@ class EasyAdminSubscriber implements EventSubscriberInterface
         foreach ($sheetData as $rowIndex => $currentRow) {
             if ($rowIndex == 1) continue;
             $query .= " (null";
-            $fields = $this->entityManager->getRepository(FileField::class)->findAll();
+            $fields = $this->entityManager->getRepository(Field::class)->findAll();
             foreach ($fields as $index => $field) {
                 $query .= ",'" . str_replace("'", "\'", $currentRow[chr($index + 65)]) . "'";
             }
@@ -153,11 +162,11 @@ class EasyAdminSubscriber implements EventSubscriberInterface
         /* @var $sheet Worksheet */
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setCellValue('A1', 'Hello World !');
-        $fields = $this->entityManager->getRepository(FileField::class)->findAll();
+        $fields = $this->entityManager->getRepository(Field::class)->findAll();
         foreach ($fields as $index => $field) {
             $sheet->setCellValue(chr($index + 65) . "1", $field->getLabel());
         }
-        $rows = $this->entityManager->getRepository(File::class)->findAll();
+        $rows = $this->entityManager->getRepository(Cve::class)->findAll();
         foreach ($rows as $rowIndex => $row) {
             foreach ($fields as $index => $field) {
                 $key = "get" . ucfirst($field->getKey());
