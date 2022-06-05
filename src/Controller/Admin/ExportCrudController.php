@@ -19,7 +19,6 @@ class ExportCrudController extends AbstractCrudController
         yield TextField::new('name');
         yield ChoiceField::new('type')->setChoices([
             'cve' => 'CVE',
-            'cpe' => 'CPE',
         ]);
         yield TextField::new('path')->setTemplatePath('easy_admin/cve.html.twig')->onlyOnIndex();
     }
