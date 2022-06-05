@@ -24,26 +24,44 @@ class Config
     /**
      * @var string|null
      *
-     * @ORM\Column(name="api_key", type="text", length=65535, nullable=true)
+     * @ORM\Column(name="config_name", type="text", length=65535, nullable=true)
      */
-    private $apiKey;
+    private $configName;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getApiKey(): ?string
+    public function getConfigName(): ?string
     {
-        return $this->apiKey;
+        return $this->configName;
     }
 
-    public function setApiKey(?string $apiKey): self
+    public function setConfigName(?string $configName): self
     {
-        $this->apiKey = $apiKey;
+        $this->configName = $configName;
 
         return $this;
     }
 
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="config_value", type="text", length=65535, nullable=true)
+     */
+    private $configValue;
+
+    function getConfigValue(): ?string
+    {
+        return $this->configValue;
+    }
+
+    public function setConfigValue(?string $configValue): self
+    {
+        $this->configValue = $configValue;
+
+        return $this;
+    }
 
 }
