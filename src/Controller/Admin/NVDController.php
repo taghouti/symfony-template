@@ -32,7 +32,7 @@ class NVDController extends AbstractController
         $this->entityManager = $entityManager;
         $this->client = $client;
         $this->parameterBag = $parameterBag;
-        $this->nvdFilesPath = $this->parameterBag->get('kernel.project_dir') . "/public/nvd_files/";
+        $this->nvdFilesPath = $this->parameterBag->get('kernel.project_dir') . "/nvdlib/main.py";
         $this->session = $session;
         $this->mailer = $mailer;
     }
@@ -109,7 +109,7 @@ class NVDController extends AbstractController
         $cves = [];
         $errors = [];
         foreach ($cpes as $cpe) {
-            $path = shell_exec('python3 C:\Users\MSI\Documents\projects\nvdlib\main.py "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960"');
+            $path = shell_exec('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960"');
             $path = str_replace(array("\r", "\n"), '', $path);
             if (!is_file($path)) {
                 $errors[$cpe->getCpe()] = $path;
