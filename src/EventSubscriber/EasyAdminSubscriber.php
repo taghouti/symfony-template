@@ -107,8 +107,6 @@ class EasyAdminSubscriber implements EventSubscriberInterface
      */
     public function setImportPath(Import $entity): void
     {
-        $path = $entity->getPath();
-        $entity->setPath($path);
         $this->entityManager->persist($entity);
         $this->entityManager->flush();
         if (strtolower($entity->getType()) == 'data') $this->import($path);

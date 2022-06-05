@@ -255,6 +255,193 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2022-05-27 21:04:06
+
+CREATE TABLE generic (
+                         id int(11) NOT NULL AUTO_INCREMENT,
+                         CVE_data_type TEXT,
+                         CVE_data_format TEXT,
+                         CVE_data_version TEXT,
+                         CVE_data_numberOfCVEs TEXT,
+                         CVE_data_timestamp TEXT,
+                         PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items (
+                                   generic_id int(11),
+                                   id int(11) NOT NULL AUTO_INCREMENT,
+                                   publishedDate TEXT,
+                                   lastModifiedDate TEXT,
+                                   PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_cve (
+                                       generic_CVE_Items_id int(11),
+                                       id int(11) NOT NULL AUTO_INCREMENT,
+                                       data_type TEXT,
+                                       data_format TEXT,
+                                       data_version TEXT,
+                                       PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_cve_CVE_data_meta (
+                                                     generic_CVE_Items_cve_id int(11),
+                                                     id int(11) NOT NULL AUTO_INCREMENT,
+                                                     ASSIGNER TEXT,
+                                                     PRIMARY KEY (ID)
+);
+
+CREATE TABLE generic_CVE_Items_cve_problemtype (
+                                                   generic_CVE_Items_cve_id int(11),
+                                                   id int(11) NOT NULL AUTO_INCREMENT,
+                                                   PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_cve_problemtype_problemtype_data (
+                                                                    generic_CVE_Items_cve_problemtype_id int(11),
+                                                                    id int(11) NOT NULL AUTO_INCREMENT,
+                                                                    PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_cve_problemtype_problemtype_data_description (
+                                                                                generic_CVE_Items_cve_problemtype_problemtype_data_id int(11),
+                                                                                id int(11) NOT NULL AUTO_INCREMENT,
+                                                                                lang TEXT,
+                                                                                value TEXT,
+                                                                                PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_cve_references (
+                                                  generic_CVE_Items_cve_id int(11),
+                                                  id int(11) NOT NULL AUTO_INCREMENT,
+                                                  PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_cve_references_reference_data (
+                                                                 generic_CVE_Items_cve_references_id int(11),
+                                                                 id int(11) NOT NULL AUTO_INCREMENT,
+                                                                 url TEXT,
+                                                                 name TEXT,
+                                                                 refsource TEXT,
+                                                                 PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_cve_references_reference_data_tags (
+                                                                      generic_CVE_Items_cve_references_reference_data_id int(11),
+                                                                      id int(11) NOT NULL AUTO_INCREMENT,
+                                                                      value TEXT,
+                                                                      PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_cve_description (
+                                                   generic_CVE_Items_cve_id int(11),
+                                                   id int(11) NOT NULL AUTO_INCREMENT,
+                                                   PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_cve_description_description_data (
+                                                                    generic_CVE_Items_cve_description_id int(11),
+                                                                    id int(11) NOT NULL AUTO_INCREMENT,
+                                                                    lang TEXT,
+                                                                    value TEXT,
+                                                                    PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_configurations (
+                                                  generic_CVE_Items_id int(11),
+                                                  id int(11) NOT NULL AUTO_INCREMENT,
+                                                  CVE_data_version TEXT,
+                                                  PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_configurations_nodes (
+                                                        generic_CVE_Items_configurations_id int(11),
+                                                        id int(11) NOT NULL AUTO_INCREMENT,
+                                                        operator TEXT,
+                                                        PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_configurations_nodes_children (
+                                                                 generic_CVE_Items_configurations_nodes_id int(11),
+                                                                 id int(11) NOT NULL AUTO_INCREMENT,
+                                                                 value TEXT,
+                                                                 PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_configurations_nodes_cpe_match (
+                                                                  generic_CVE_Items_configurations_nodes_id int(11),
+                                                                  id int(11) NOT NULL AUTO_INCREMENT,
+                                                                  vulnerable BOOLEAN,
+                                                                  cpe23Uri TEXT,
+                                                                  PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_configurations_nodes_cpe_match_cpe_name (
+                                                                           generic_CVE_Items_configurations_nodes_cpe_match_id int(11),
+                                                                           id int(11) NOT NULL AUTO_INCREMENT,
+                                                                           value TEXT,
+                                                                           PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_impact (
+                                          generic_CVE_Items_id int(11),
+                                          id int(11) NOT NULL AUTO_INCREMENT,
+                                          PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_impact_baseMetricV3 (
+                                                       generic_CVE_Items_impact_id int(11),
+                                                       id int(11) NOT NULL AUTO_INCREMENT,
+                                                       exploitabilityScore INT,
+                                                       impactScore INT,
+                                                       PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_impact_baseMetricV3_cvssV3 (
+                                                              generic_CVE_Items_impact_baseMetricV3_id int(11),
+                                                              id int(11) NOT NULL AUTO_INCREMENT,
+                                                              version TEXT,
+                                                              vectorString TEXT,
+                                                              attackVector TEXT,
+                                                              attackComplexity TEXT,
+                                                              privilegesRequired TEXT,
+                                                              userInteraction TEXT,
+                                                              scope TEXT,
+                                                              confidentialityImpact TEXT,
+                                                              integrityImpact TEXT,
+                                                              availabilityImpact TEXT,
+                                                              baseScore INT,
+                                                              baseSeverity TEXT,
+                                                              PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_impact_baseMetricV2 (
+                                                       generic_CVE_Items_impact_id int(11),
+                                                       id int(11) NOT NULL AUTO_INCREMENT,
+                                                       severity TEXT,
+                                                       exploitabilityScore INT,
+                                                       impactScore INT,
+                                                       acInsufInfo BOOLEAN,
+                                                       obtainAllPrivilege BOOLEAN,
+                                                       obtainUserPrivilege BOOLEAN,
+                                                       obtainOtherPrivilege BOOLEAN,
+                                                       userInteractionRequired BOOLEAN,
+                                                       PRIMARY KEY (id)
+);
+
+CREATE TABLE generic_CVE_Items_impact_baseMetricV2_cvssV2 (
+                                                              generic_CVE_Items_impact_baseMetricV2_id int(11),
+                                                              id int(11) NOT NULL AUTO_INCREMENT,
+                                                              version TEXT,
+                                                              vectorString TEXT,
+                                                              accessVector TEXT,
+                                                              accessComplexity TEXT,
+                                                              authentication TEXT,
+                                                              confidentialityImpact TEXT,
+                                                              integrityImpact TEXT,
+                                                              availabilityImpact TEXT,
+                                                              baseScore INT,
+                                                              PRIMARY KEY (id)
+);
         ");
     }
 
@@ -268,5 +455,32 @@ UNLOCK TABLES;
         $this->addSql('DROP TABLE file_field');
         $this->addSql('DROP TABLE import');
         $this->addSql('DROP TABLE config');
+        $tables = [
+            "generic",
+            "generic_CVE_Items",
+            "generic_CVE_Items_cve",
+            "generic_CVE_Items_cve_CVE_data_meta",
+            "generic_CVE_Items_cve_problemtype",
+            "generic_CVE_Items_cve_problemtype_problemtype_data",
+            "generic_CVE_Items_cve_problemtype_problemtype_data_description",
+            "generic_CVE_Items_cve_references",
+            "generic_CVE_Items_cve_references_reference_data",
+            "generic_CVE_Items_cve_references_reference_data_tags",
+            "generic_CVE_Items_cve_description",
+            "generic_CVE_Items_cve_description_description_data",
+            "generic_CVE_Items_configurations",
+            "generic_CVE_Items_configurations_nodes",
+            "generic_CVE_Items_configurations_nodes_children",
+            "generic_CVE_Items_configurations_nodes_cpe_match",
+            "generic_CVE_Items_configurations_nodes_cpe_match_cpe_name",
+            "generic_CVE_Items_impact",
+            "generic_CVE_Items_impact_baseMetricV3",
+            "generic_CVE_Items_impact_baseMetricV3_cvssV3",
+            "generic_CVE_Items_impact_baseMetricV2",
+            "generic_CVE_Items_impact_baseMetricV2_cvssV2",
+        ];
+        foreach ($tables as $table) {
+            $this->addSql('DROP TABLE ' . $table);
+        }
     }
 }
