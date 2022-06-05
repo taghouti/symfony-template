@@ -26,7 +26,7 @@ class CveCrudController extends AbstractCrudController
     {
         $fields = $this->entityManager->getRepository(Field::class)->findAll();
         foreach ($fields as $field) {
-            yield TextField::new($field->getKey())
+            yield TextField::new($field->getName())
                 ->setLabel($field->getLabel())
                 ->setSortable(true)
                 ->setTextAlign('center');

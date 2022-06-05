@@ -169,9 +169,9 @@ class EasyAdminSubscriber implements EventSubscriberInterface
         $rows = $this->entityManager->getRepository(Cve::class)->findAll();
         foreach ($rows as $rowIndex => $row) {
             foreach ($fields as $index => $field) {
-                $key = "get" . ucfirst($field->getKey());
-                $key = str_replace('_', '', ucwords($key, '_'));
-                $sheet->setCellValue(chr($index + 65) . ($rowIndex + 2), $row->$key());
+                $name = "get" . ucfirst($field->getName());
+                $name = str_replace('_', '', ucwords($name, '_'));
+                $sheet->setCellValue(chr($index + 65) . ($rowIndex + 2), $row->$name());
             }
         }
         $sheet->setTitle("CPE LIST");
