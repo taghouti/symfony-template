@@ -29,6 +29,7 @@ class NVDController extends AbstractController
 
     public function __construct(MailerInterface $mailer, SessionInterface $session, ParameterBagInterface $parameterBag, HttpClientInterface $client, EntityManagerInterface $entityManager)
     {
+        set_time_limit(3600);
         $this->entityManager = $entityManager;
         $this->client = $client;
         $this->parameterBag = $parameterBag;
