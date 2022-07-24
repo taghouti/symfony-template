@@ -155,7 +155,7 @@ def __convert(product, CVEID):
     if product == 'cve':
         vuln = json.loads(json.dumps(CVEID), object_hook= CVE)
         vuln.getvars()
-        return vuln
+        return json.dumps(CVEID)
     else:
         cpeEntry = json.loads(json.dumps(CVEID), object_hook= CPE)
-        return cpeEntry 
+        return json.dumps(CVEID)
