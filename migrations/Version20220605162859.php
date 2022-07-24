@@ -58,15 +58,6 @@ final class Version20220605162859 extends AbstractMigration
             exploit_likelihood_rationale text null
         );");
 
-        $this->addSql("create table doctrine_migration_versions
-        (
-            version        varchar(191) not null
-                primary key,
-            executed_at    datetime     null,
-            execution_time int          null
-        )
-            collate = utf8_unicode_ci;");
-
         $this->addSql("create table export
         (
             id   int auto_increment
