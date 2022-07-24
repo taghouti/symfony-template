@@ -19,7 +19,7 @@ final class Version20220605162859 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql("create or replace table config
+        $this->addSql("create table config
         (
             id      int auto_increment
                 primary key,
@@ -27,7 +27,7 @@ final class Version20220605162859 extends AbstractMigration
             config_value varchar(255) null
         );");
 
-        $this->addSql("create or replace table cpe
+        $this->addSql("create table cpe
         (
             id      int auto_increment
                 primary key,
@@ -36,7 +36,7 @@ final class Version20220605162859 extends AbstractMigration
             cpe     varchar(255) not null
         );");
 
-        $this->addSql("create or replace table cve
+        $this->addSql("create table cve
         (
             id                           int auto_increment
                 primary key,
@@ -58,7 +58,7 @@ final class Version20220605162859 extends AbstractMigration
             exploit_likelihood_rationale text null
         );");
 
-        $this->addSql("create or replace table doctrine_migration_versions
+        $this->addSql("create table doctrine_migration_versions
         (
             version        varchar(191) not null
                 primary key,
@@ -67,7 +67,7 @@ final class Version20220605162859 extends AbstractMigration
         )
             collate = utf8_unicode_ci;");
 
-        $this->addSql("create or replace table export
+        $this->addSql("create table export
         (
             id   int auto_increment
                 primary key,
@@ -76,7 +76,7 @@ final class Version20220605162859 extends AbstractMigration
             type varchar(255)  not null
         );");
 
-        $this->addSql("create or replace table field
+        $this->addSql("create table field
         (
             id    int auto_increment
                 primary key,
@@ -84,7 +84,7 @@ final class Version20220605162859 extends AbstractMigration
             label varchar(255) not null
         );");
 
-        $this->addSql("create or replace table import
+        $this->addSql("create table import
         (
             id   int auto_increment
                 primary key,
@@ -94,7 +94,7 @@ final class Version20220605162859 extends AbstractMigration
         );
         ");
 
-        $this->addSql("create or replace table member
+        $this->addSql("create table member
         (
             id       int auto_increment
                 primary key,
