@@ -26,7 +26,7 @@ class DashboardController extends AbstractDashboardController
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
-            ->setTitle('IMH NVD GENERATOR')->renderSidebarMinimized();
+            ->setTitle('R-MAX')->renderSidebarMinimized();
     }
 
     public function configureMenuItems(): iterable

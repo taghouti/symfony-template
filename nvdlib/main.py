@@ -12,6 +12,6 @@ result = nvdlib.searchCVE(cpeName=sys.argv[1], keyword='',
 cpe = sys.argv[1].replace(":", "")
 cpe = cpe.replace("*", "")
 
-with open(os.path.dirname(os.path.realpath(__file__)) + "\\" + cpe, 'w') as f:
+with open(os.path.dirname(os.path.realpath(__file__)) + "/" + cpe, 'w') as f:
     f.write(json.dumps(result))
     print(f.name)
