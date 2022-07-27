@@ -255,7 +255,6 @@ class NVDController extends AbstractController
         }
         if (!empty($message)) {
             $this->session->getFlashBag()->add('error', $message);
-            $this->session->getFlashBag()->clear();
         }
         $message = "";
         foreach ($cpeList as $cpe) {
@@ -266,7 +265,6 @@ class NVDController extends AbstractController
         }
         if (!empty($message)) {
             $this->session->getFlashBag()->add('success', $message);
-            $this->session->getFlashBag()->clear();
         }
         return $this->redirectToRoute('admin');
     }
