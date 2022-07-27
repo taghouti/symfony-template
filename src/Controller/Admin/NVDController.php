@@ -107,10 +107,9 @@ class NVDController extends AbstractController
         $cves = [];
         $errors = [];
         foreach ($cpes as $cpe) {
-            $path = shell_exec(escapeshellcmd('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960"'));
-            die(print_r($path, true));
+            $path = shell_exec(('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960" 2>&1'));
             $path = str_replace(array("\r", "\n"), '', $path);
-            if (!is_file($path)) {
+            if (!is_string($path) || str_contains($path, 'Traceback') || !is_file($path)) {
                 $errors[$cpe->getCpe()] = $path . " NOT FOUND";
                 continue;
             }
