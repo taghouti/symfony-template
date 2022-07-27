@@ -253,8 +253,9 @@ class NVDController extends AbstractController
         foreach ($errors as $errorKey => $errorMessage) {
             $message .= "$errorKey : $errorMessage <br>";
         }
-        if (!empty(trim($message))) {
+        if (!empty($message)) {
             $this->session->getFlashBag()->add('error', $message);
+            $this->session->getFlashBag()->clear();
         }
         $message = "";
         foreach ($cpeList as $cpe) {
@@ -263,8 +264,9 @@ class NVDController extends AbstractController
             $message .= (isset($updated[$cpe]) ? "Updated $cpe : " . (count($updated[$cpe]) + 1) . "<br>" : "");
             $message .= (isset($skipped[$cpe]) ? "Skipped $cpe : " . (count($created[$cpe]) + 1) . "<br>" : "");
         }
-        if (!empty(trim($message))) {
+        if (!empty($message)) {
             $this->session->getFlashBag()->add('success', $message);
+            $this->session->getFlashBag()->clear();
         }
         return $this->redirectToRoute('admin');
     }
