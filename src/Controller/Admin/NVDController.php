@@ -254,7 +254,7 @@ class NVDController extends AbstractController
             $message .= "$errorKey : $errorMessage <br>";
         }
         if (!empty(trim($message))) {
-            $this->session->getFlashBag()->add('warning', $message);
+            $this->session->getFlashBag()->add('error', $message);
         }
         $message = "";
         foreach ($cpeList as $cpe) {
