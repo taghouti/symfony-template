@@ -5,7 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Cpe;
 use App\Entity\Cve;
 use Doctrine\ORM\EntityManagerInterface;
-use ErrorException;
+use Exception;
 use JetBrains\PhpStorm\ArrayShape;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -107,8 +107,7 @@ class NVDController extends AbstractController
         $cves = [];
         $errors = [];
         foreach ($cpes as $cpe) {
-            $path = shell_exec('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960"');
-            var_dump('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960"');
+            $path = shell_exec(escapeshellcmd('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960"'));
             $path = str_replace(array("\r", "\n"), '', $path);
             if (!is_file($path)) {
                 $errors[$cpe->getCpe()] = $path . " NOT FOUND";
@@ -139,7 +138,7 @@ class NVDController extends AbstractController
                         "matching" => $cpe,
                         "cots" => explode(':', $cpe)[4],
                     ];
-                } catch (TypeError|ErrorException $e) {
+                } catch (TypeError $e) {
                     $errors[$cve->getCve()] = $e->getMessage();
                 }
                 $parsed[$cpe][] = $cols;
@@ -153,7 +152,7 @@ class NVDController extends AbstractController
         ];
     }
 
-    private function _sendEmail($subject, $content): void
+    private function _sendEmail($subject, $content): TransportExceptionInterface|Exception|bool
     {
         $email = (new Email())
             ->from('nvd@imh-groupe.com')
@@ -164,9 +163,9 @@ class NVDController extends AbstractController
 
         try {
             $this->mailer->send($email);
-            return;
+            return true;
         } catch (TransportExceptionInterface $e) {
-            return;
+            return $e;
         }
     }
 
