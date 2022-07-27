@@ -61,9 +61,20 @@
 </head>
 <body>
 
-{% for type, messages in app.session.flashbag.all() %}
+{% for type, messages in app.flashes('success') %}
     {% for message in messages %}
-        <div class="alert alert-{{ type }} flex flex-row items-center justify-between">
+        <div class="alert alert-success">
+            <p>{{ message|trans|raw }}</p>
+            <button type="button" class="float-right text-2xl" onclick="this.closest('div').style.display='none'">
+                &times;
+            </button>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{% for type, messages in app.flashes('error') %}
+    {% for message in messages %}
+        <div class="alert alert-danger">
             <p>{{ message|trans|raw }}</p>
             <button type="button" class="float-right text-2xl" onclick="this.closest('div').style.display='none'">
                 &times;
