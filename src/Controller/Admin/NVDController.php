@@ -15,23 +15,20 @@ use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use TypeError;
 
 class NVDController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
-    private HttpClientInterface $client;
     private ParameterBagInterface $parameterBag;
     private string $nvdFilesPath;
     private SessionInterface $session;
     private MailerInterface $mailer;
 
-    public function __construct(MailerInterface $mailer, SessionInterface $session, ParameterBagInterface $parameterBag, HttpClientInterface $client, EntityManagerInterface $entityManager)
+    public function __construct(MailerInterface $mailer, SessionInterface $session, ParameterBagInterface $parameterBag, EntityManagerInterface $entityManager)
     {
         set_time_limit(3600);
         $this->entityManager = $entityManager;
-        $this->client = $client;
         $this->parameterBag = $parameterBag;
         $this->nvdFilesPath = $this->parameterBag->get('kernel.project_dir') . "/nvdlib/main.py";
         $this->session = $session;
@@ -111,6 +108,7 @@ class NVDController extends AbstractController
         $errors = [];
         foreach ($cpes as $cpe) {
             $path = shell_exec('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960"');
+            var_dump('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960"');
             $path = str_replace(array("\r", "\n"), '', $path);
             if (!is_file($path)) {
                 $errors[$cpe->getCpe()] = $path . " NOT FOUND";
