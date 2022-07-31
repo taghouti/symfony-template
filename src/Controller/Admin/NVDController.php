@@ -290,7 +290,7 @@ class NVDController extends AbstractController
     }
 
     private function _sendTestingEmail($configs) {
-        $emails = $configs[7].getConfigValue();
+        $emails = $configs[6].getConfigValue();
         $emails = str_contains($emails, ',') ? explode(',') : [$emails];
         $from = $configs[1].getConfigValue();
         $user = $from;
