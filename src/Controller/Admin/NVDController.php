@@ -265,4 +265,22 @@ class NVDController extends AbstractController
         }
         return $this->redirectToRoute('admin');
     }
+
+    #[Route('/database/clear', name: 'clear_database')]
+    public function clearDatabase(): RedirectResponse
+    {
+        $this->entityManager->getConnection()->executeUpdate(
+            "DELETE * FROM cve"
+        );
+        $this->entityManager->flush();
+        $this->entityManager->getConnection()->executeUpdate(
+            "DELETE * FROM export"
+        );
+        $this->entityManager->flush();
+        $this->entityManager->getConnection()->executeUpdate(
+            "DELETE * FROM import"
+        );
+        $this->entityManager->flush();
+        return $this->redirectToRoute('admin');
+    }
 }
