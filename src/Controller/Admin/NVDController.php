@@ -299,20 +299,20 @@ class NVDController extends AbstractController
         $port = $configs[4]->getConfigValue();
         $dsn = "smtp://" . $user . ":" . $pass . "@" . $server . ":" . $port;
         $transport = Transport::fromDsn($dsn);
-        $customMailer = new Mailer($transport);
-        $email = (new TemplatedEmail())
-            ->from(new Address($from, 'R-MAX TESTING EMAIL'))
-            ->subject('R-MAX TESTING EMAIL')
-            ->text('Hello from R-MAX')
-            ->context([]);
         foreach ($emails as $currentEmail) {
+            $customMailer = new Mailer($transport);
+            $email = (new TemplatedEmail())
+                ->from(new Address($from, 'R-MAX TESTING EMAIL'))
+                ->subject('R-MAX TESTING EMAIL')
+                ->text('Hello from R-MAX')
+                ->context([]);
             $email->to($currentEmail);
-        }
-        try {
-            $customMailer->send($email);
-            $this->session->getFlashBag()->add('success', 'Email sent successfully to ' . join(',', $emails));
-        } catch (TransportExceptionInterface $e) {
-            $this->session->getFlashBag()->add('danger', 'Error :  ' . $e->getMessage());
+            try {
+                $customMailer->send($email);
+                $this->session->getFlashBag()->add('success', 'Email sent successfully to ' . $currentEmail);
+            } catch (TransportExceptionInterface $e) {
+                $this->session->getFlashBag()->add('danger', 'Error :  ' . $e->getMessage());
+            }
         }
     }
 
