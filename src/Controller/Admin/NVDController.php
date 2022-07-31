@@ -292,8 +292,8 @@ class NVDController extends AbstractController
     private function _sendTestingEmail($configs) {
         $emails = $configs[6]->getConfigValue();
         $emails = str_contains($emails, ',') ? explode(',', $emails) : [$emails];
-        $from = $configs[1]->getConfigValue();
-        $user = $from;
+        $user = $configs[1]->getConfigValue();
+        $from = "R-MAX@imh-service.com";
         $pass = $configs[2]->getConfigValue();
         $server = $configs[3]->getConfigValue();
         $port = $configs[4]->getConfigValue();
