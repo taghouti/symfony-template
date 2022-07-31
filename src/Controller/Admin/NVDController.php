@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Config;
 use App\Entity\Cpe;
 use App\Entity\Cve;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,6 +16,10 @@ use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mime\Address;
 use TypeError;
 
 class NVDController extends AbstractController
@@ -284,10 +289,35 @@ class NVDController extends AbstractController
         return $this->redirectToRoute('admin');
     }
 
+    private function _sendTestingEmail($configs) {
+        $emails = $configs[7].getConfigValue();
+        $emails = str_contains($emails, ',') ? explode(',') : [$emails];
+        $from = $configs[1].getConfigValue();
+        $user = $from;
+        $pass = $configs[2].getConfigValue();
+        $server = $configs[3].getConfigValue();
+        $port = $configs[4].getConfigValue();
+        $dsn = "smtp://" . $user . ":" . $pass . "@" . $server . ":" . $port;
+        $transport = Transport::fromDsn($dsn);
+        $customMailer = new Mailer($transport);
+        $email = (new TemplatedEmail())
+            ->from(new Address($from, 'R-MAX TESTING EMAIL'))
+            ->to($emails)
+            ->subject('R-MAX TESTING EMAIL')
+            ->text('Hello from R-MAX')
+            ->context([]);
+        try {
+            $customMailer->send($email);
+            $this->session->getFlashBag()->add('success', 'Email sent successfully to ' . join(',', $emails));
+        } catch (TransportExceptionInterface $e) {
+            $this->session->getFlashBag()->add('danger', 'Error :  ' . $e->getMessage());
+        }
+    }
+
     #[Route('/email/test', name: 'test_email_sending')]
     public function testEmailSending(): RedirectResponse
     {
-
+        $this->_sendTestingEmail($this->entityManager->getRepository(Config::class)->findAll());
         return $this->redirectToRoute('admin');
     }
 }
