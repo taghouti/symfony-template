@@ -270,15 +270,15 @@ class NVDController extends AbstractController
     public function clearDatabase(): RedirectResponse
     {
         $this->entityManager->getConnection()->executeUpdate(
-            "DELETE * FROM cve"
+            "DELETE FROM cve"
         );
         $this->entityManager->flush();
         $this->entityManager->getConnection()->executeUpdate(
-            "DELETE * FROM export"
+            "DELETE FROM export"
         );
         $this->entityManager->flush();
         $this->entityManager->getConnection()->executeUpdate(
-            "DELETE * FROM import"
+            "DELETE FROM import"
         );
         $this->entityManager->flush();
         return $this->redirectToRoute('admin');
