@@ -283,4 +283,11 @@ class NVDController extends AbstractController
         $this->entityManager->flush();
         return $this->redirectToRoute('admin');
     }
+
+    #[Route('/email/test', name: 'test_email_sending')]
+    public function testEmailSending(): RedirectResponse
+    {
+
+        return $this->redirectToRoute('admin');
+    }
 }
