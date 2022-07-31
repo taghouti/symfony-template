@@ -70,17 +70,20 @@ class EasyAdminImportSubscriber implements EventSubscriberInterface
         $sheetData = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
         $deleteQuery = "";
         $query = "INSERT INTO cve VALUES ";
+        $queries = [];
         foreach ($sheetData as $rowIndex => $currentRow)
         {
             if ($rowIndex == 1) continue;
-            $query .= " (null";
+            $currentQuery = " (null";
             $fields = $this->entityManager->getRepository(Field::class)->findAll();
             foreach ($fields as $index => $field) {
-                $query .= ",'" . str_replace("'", "\'", $currentRow[chr($index + 65)]) . "'";
+                $currentQuery .= ",'" . str_replace("'", "\'", $currentRow[chr($index + 65)]) . "'";
             }
-            $query .= " ) ";
+            $currentQuery .= " ) ";
+            $queries[] = $currentQuery;
             $deleteQuery .= "DELETE FROM cve WHERE cve='" . str_replace("'", "\'", $currentRow[chr(  65)]) . "';";
         }
+        $query .= join(',', $queries);
         $this->entityManager->getConnection()->executeUpdate($deleteQuery);
         $this->entityManager->flush();
         $this->entityManager->getConnection()->executeUpdate($query);
