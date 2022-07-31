@@ -102,10 +102,10 @@ final class Version20220605162859 extends AbstractMigration
         $this->addSql("
         INSERT INTO `cpe` (`id`, `name`, `version`, `cpe`) VALUES (1,'iptables','1.8.3','cpe:2.3:a:netfilter:iptables:1.8.3:*:*:*:*:*:*:*'),(2,'strongswan ','5.8.1','cpe:2.3:a:strongswan:strongswan:5.8.1:*:*:*:*:*:*:*'),(3,'openssl ','1.1.1d','cpe:2.3:a:openssl:openssl:1.1.1d:*:*:*:*:*:*:*'),(4,'bash ','5.0','cpe:2.3:a:gnu:bash:5.0:-:*:*:*:*:*:*'),(5,'curl ','7.66.0','cpe:2.3:a:haxx:curl:7.66.0:*:*:*:*:*:*:*'),(6,'NetworkManager ','1.18.4','cpe:2.3:a:gnome:networkmanager:1.18.4:*:*:*:*:*:*:*'),(7,'dnsmasq ','2.80','cpe:2.3:a:thekelleys:dnsmasq:2.80:*:*:*:*:*:*:*'),(8,'GCC','9.2','cpe:2.3:a:gnu:gcc:9.2.0:*:*:*:*:*:*:*'),(9,'GNUTLS ','3.6.8','cpe:2.3:a:gnu:gnutls:3.6.8:*:*:*:*:*:*:*'),(10,'glibc ','2,3','cpe:2.3:a:gnu:glibc:2.30:*:*:*:*:*:*:*'),(11,'Linux Kernel ','5.4.2','cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*'),(12,'Libqmi ','1.24.2','cpe:2.3:a:freedesktop:libqmi:1.24.2:*:*:*:*:*:*:*');
         INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (1,'API KEY','b5d8d7c4-1f93-4584-9ef3-7855af11a960');
-        INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (2,'SMTP USER','R-MAX@imh-service.com');
-        INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (3,'SMTP PASS','Test1234!');
-        INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (4,'SMTP HOST','ssl0.ovh.net');
-        INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (5,'SMTP PORT','465');
+        INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (2,'SMTP USER','sobmti.smtp@gmail.com');
+        INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (3,'SMTP PASS','hbcmhxltotrtllay');
+        INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (4,'SMTP HOST','smtp.gmail.com');
+        INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (5,'SMTP PORT','587');
         INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (6,'SMTP PROTOCOL','SSL/TLS');
         INSERT INTO `config` (`id`, `config_name`, `config_value`) VALUES (7,'EMAILS (seperated by comma ,)','imed.mh@imh-groupe.com,imed.meddeb-hamrouni.external@airbus.com,taghoutitarek@gmail.com');
         INSERT INTO `member` (`id`, `username`, `roles`, `password`) VALUES (1,'admin','[\"ROLE_ADMIN\", \"ROLE_USER\"]','$2y$13\$BI3xOTSdju6IJaUXxrP1hOqcjhAGAWfmkAxSxjHy1JjawRTkn3Wdu'),(3,'tarek','{\"0\":\"ROLE_USER\",\"2\":\"ROLE_USER\"}','$2y$13\$AIqnldsp2vLri/6.d.oIKeZLg55dC0a04WI7kwgvVVGasmCvmO/PW');
