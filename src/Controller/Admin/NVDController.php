@@ -290,13 +290,13 @@ class NVDController extends AbstractController
     }
 
     private function _sendTestingEmail($configs) {
-        $emails = $configs[6].getConfigValue();
+        $emails = $configs[6]->getConfigValue();
         $emails = str_contains($emails, ',') ? explode(',') : [$emails];
-        $from = $configs[1].getConfigValue();
+        $from = $configs[1]->getConfigValue();
         $user = $from;
-        $pass = $configs[2].getConfigValue();
-        $server = $configs[3].getConfigValue();
-        $port = $configs[4].getConfigValue();
+        $pass = $configs[2]->getConfigValue();
+        $server = $configs[3]->getConfigValue();
+        $port = $configs[4]->getConfigValue();
         $dsn = "smtp://" . $user . ":" . $pass . "@" . $server . ":" . $port;
         $transport = Transport::fromDsn($dsn);
         $customMailer = new Mailer($transport);
