@@ -6,15 +6,12 @@ use App\Entity\Config;
 use App\Entity\Cpe;
 use App\Entity\Cve;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use JetBrains\PhpStorm\ArrayShape;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mailer\Mailer;
@@ -28,20 +25,18 @@ class NVDController extends AbstractController
     private ParameterBagInterface $parameterBag;
     private string $nvdFilesPath;
     private SessionInterface $session;
-    private MailerInterface $mailer;
     /**
      * @var array|object[]
      */
     private array $configs;
 
-    public function __construct(MailerInterface $mailer, SessionInterface $session, ParameterBagInterface $parameterBag, EntityManagerInterface $entityManager)
+    public function __construct(SessionInterface $session, ParameterBagInterface $parameterBag, EntityManagerInterface $entityManager)
     {
         set_time_limit(3600);
         $this->entityManager = $entityManager;
         $this->parameterBag = $parameterBag;
         $this->nvdFilesPath = $this->parameterBag->get('kernel.project_dir') . "/nvdlib/main.py";
         $this->session = $session;
-        $this->mailer = $mailer;
         $this->configs = $this->entityManager->getRepository(Config::class)->findAll();
     }
 
@@ -117,7 +112,7 @@ class NVDController extends AbstractController
         $cves = [];
         $errors = [];
         foreach ($cpes as $cpe) {
-            $path = shell_exec(('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "b5d8d7c4-1f93-4584-9ef3-7855af11a960" 2>&1'));
+            $path = shell_exec(('python3 ' . $this->nvdFilesPath . ' "' . $cpe->getCpe() . '" "' . $this->configs[0]->getConfigValue() . '" 2>&1'));
             $path = str_replace(array("\r", "\n"), '', $path);
             if (!is_string($path) || str_contains($path, 'Traceback') || !is_file($path)) {
                 $errors[$cpe->getCpe()] = $path . " NOT FOUND";
@@ -164,14 +159,14 @@ class NVDController extends AbstractController
 
     private function _sendEmail($subject, $content)
     {
-        $configs = $this->configs;
-        $emails = $configs[6]->getConfigValue();
+        /** @noinspection DuplicatedCode */
+        $emails = $this->configs[6]->getConfigValue();
         $emails = str_contains($emails, ',') ? explode(',', $emails) : [$emails];
-        $user = $configs[1]->getConfigValue();
+        $user = $this->configs[1]->getConfigValue();
         $from = "R-MAX@imh-service.com";
-        $pass = $configs[2]->getConfigValue();
-        $server = $configs[3]->getConfigValue();
-        $port = $configs[4]->getConfigValue();
+        $pass = $this->configs[2]->getConfigValue();
+        $server = $this->configs[3]->getConfigValue();
+        $port = $this->configs[4]->getConfigValue();
         $dsn = "smtp://" . $user . ":" . $pass . "@" . $server . ":" . $port;
         $transport = Transport::fromDsn($dsn);
         foreach ($emails as $currentEmail) {
@@ -288,6 +283,10 @@ class NVDController extends AbstractController
         return $this->redirectToRoute('admin');
     }
 
+    /** @noinspection PhpUnhandledExceptionInspection
+     * @noinspection SqlDialectInspection
+     * @noinspection PhpDeprecationInspection
+     */
     #[Route('/database/clear', name: 'clear_database')]
     public function clearDatabase(): RedirectResponse
     {
@@ -306,14 +305,15 @@ class NVDController extends AbstractController
         return $this->redirectToRoute('admin');
     }
 
-    private function _sendTestingEmail($configs) {
-        $emails = $configs[6]->getConfigValue();
+    private function _sendTestingEmail() {
+        /** @noinspection DuplicatedCode */
+        $emails = $this->configs[6]->getConfigValue();
         $emails = str_contains($emails, ',') ? explode(',', $emails) : [$emails];
-        $user = $configs[1]->getConfigValue();
+        $user = $this->configs[1]->getConfigValue();
         $from = "R-MAX@imh-service.com";
-        $pass = $configs[2]->getConfigValue();
-        $server = $configs[3]->getConfigValue();
-        $port = $configs[4]->getConfigValue();
+        $pass = $this->configs[2]->getConfigValue();
+        $server = $this->configs[3]->getConfigValue();
+        $port = $this->configs[4]->getConfigValue();
         $dsn = "smtp://" . $user . ":" . $pass . "@" . $server . ":" . $port;
         $transport = Transport::fromDsn($dsn);
         foreach ($emails as $currentEmail) {
@@ -336,7 +336,7 @@ class NVDController extends AbstractController
     #[Route('/email/test', name: 'test_email_sending')]
     public function testEmailSending(): RedirectResponse
     {
-        $this->_sendTestingEmail($this->configs);
+        $this->_sendTestingEmail();
         return $this->redirectToRoute('admin');
     }
 }
