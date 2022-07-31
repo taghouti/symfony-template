@@ -302,10 +302,12 @@ class NVDController extends AbstractController
         $customMailer = new Mailer($transport);
         $email = (new TemplatedEmail())
             ->from(new Address($from, 'R-MAX TESTING EMAIL'))
-            ->to($emails)
             ->subject('R-MAX TESTING EMAIL')
             ->text('Hello from R-MAX')
             ->context([]);
+        foreach ($emails as $currentEmail) {
+            $email->to($currentEmail);
+        }
         try {
             $customMailer->send($email);
             $this->session->getFlashBag()->add('success', 'Email sent successfully to ' . join(',', $emails));
