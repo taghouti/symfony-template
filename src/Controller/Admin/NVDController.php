@@ -29,6 +29,10 @@ class NVDController extends AbstractController
     private string $nvdFilesPath;
     private SessionInterface $session;
     private MailerInterface $mailer;
+    /**
+     * @var array|object[]
+     */
+    private array $configs;
 
     public function __construct(MailerInterface $mailer, SessionInterface $session, ParameterBagInterface $parameterBag, EntityManagerInterface $entityManager)
     {
@@ -38,6 +42,7 @@ class NVDController extends AbstractController
         $this->nvdFilesPath = $this->parameterBag->get('kernel.project_dir') . "/nvdlib/main.py";
         $this->session = $session;
         $this->mailer = $mailer;
+        $this->configs = $this->entityManager->getRepository(Config::class)->findAll();
     }
 
     #[Route('/nvd', name: 'nvd')]
@@ -157,20 +162,32 @@ class NVDController extends AbstractController
         ];
     }
 
-    private function _sendEmail($subject, $content): TransportExceptionInterface|Exception|bool
+    private function _sendEmail($subject, $content)
     {
-        $email = (new Email())
-            ->from('nvd@imh-groupe.com')
-            ->to('imed.mh@imh-groupe.com')
-            ->cc('imed.meddeb-hamrouni.external@airbus.com')
-            ->subject($subject)
-            ->text($content);
-
-        try {
-            $this->mailer->send($email);
-            return true;
-        } catch (TransportExceptionInterface $e) {
-            return $e;
+        $configs = $this->configs;
+        $emails = $configs[6]->getConfigValue();
+        $emails = str_contains($emails, ',') ? explode(',', $emails) : [$emails];
+        $user = $configs[1]->getConfigValue();
+        $from = "R-MAX@imh-service.com";
+        $pass = $configs[2]->getConfigValue();
+        $server = $configs[3]->getConfigValue();
+        $port = $configs[4]->getConfigValue();
+        $dsn = "smtp://" . $user . ":" . $pass . "@" . $server . ":" . $port;
+        $transport = Transport::fromDsn($dsn);
+        foreach ($emails as $currentEmail) {
+            $customMailer = new Mailer($transport);
+            $email = (new TemplatedEmail())
+                ->from(new Address($from, 'R-MAX'))
+                ->subject($subject)
+                ->text($content)
+                ->context([]);
+            $email->to($currentEmail);
+            try {
+                $customMailer->send($email);
+                $this->session->getFlashBag()->add('success', 'Email sent successfully to ' . $currentEmail);
+            } catch (TransportExceptionInterface $e) {
+                $this->session->getFlashBag()->add('danger', 'Error while sending email to' . $currentEmail . ' :  ' . $e->getMessage());
+            }
         }
     }
 
@@ -302,7 +319,7 @@ class NVDController extends AbstractController
         foreach ($emails as $currentEmail) {
             $customMailer = new Mailer($transport);
             $email = (new TemplatedEmail())
-                ->from(new Address($from, 'R-MAX TESTING EMAIL'))
+                ->from(new Address($from, 'R-MAX'))
                 ->subject('R-MAX TESTING EMAIL')
                 ->text('Hello from R-MAX')
                 ->context([]);
@@ -319,7 +336,7 @@ class NVDController extends AbstractController
     #[Route('/email/test', name: 'test_email_sending')]
     public function testEmailSending(): RedirectResponse
     {
-        $this->_sendTestingEmail($this->entityManager->getRepository(Config::class)->findAll());
+        $this->_sendTestingEmail($this->configs);
         return $this->redirectToRoute('admin');
     }
 }
