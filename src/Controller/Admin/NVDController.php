@@ -61,7 +61,7 @@ class NVDController extends AbstractController
                 $currentCve = $this->entityManager->getRepository(Cve::class)->findOneBy(['cve' => $cveColsData['cve']]);
                 if ($currentCve) {
                     if (
-                        strtolower($currentCve->getAnalysisStatus()) !== "analysis completed"
+                        trim(strtolower($currentCve->getAnalysisStatus())) !== "analysis completed"
                     ) {
                         if ($this->_isKernel($cveColsData)) {
                             $kernel['update'][] = $cveColsData;
@@ -187,10 +187,10 @@ class NVDController extends AbstractController
     private function _isKernel($cve): bool
     {
         if (
-            isset($cve['matching']) && (trim($cve['matching']) == "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
+            isset($cve['matching']) && (trim(strtolower($cve['matching'])) == "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
             isset($cve['base_score']) && ($cve['base_score'] >= 7) &&
-            isset($cve['cve_description']) && (str_contains($cve['cve_description'], 'usb')) &&
-            isset($cve['attack_vector']) && (str_contains($cve['attack_vector'], 'Network') || str_contains($cve['attack_vector'], 'Adjacent'))
+            isset($cve['cve_description']) && (str_contains(strtolower($cve['cve_description']), 'usb')) &&
+            isset($cve['attack_vector']) && (str_contains(strtolower($cve['attack_vector']), 'network') || str_contains(strtolower($cve['attack_vector']), 'adjacent'))
         ) {
             return true;
         }
@@ -200,7 +200,7 @@ class NVDController extends AbstractController
     private function _isOthers($cve): bool
     {
         if (
-            isset($cve['matching']) && (trim($cve['matching']) != "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
+            isset($cve['matching']) && (trim(strtolower($cve['matching'])) != "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
             isset($cve['base_score']) && ($cve['base_score'] >= 7)
         ) {
             return true;
@@ -237,7 +237,7 @@ class NVDController extends AbstractController
                 $currentCve = $this->entityManager->getRepository(Cve::class)->findOneBy(['cve' => $cveColsData['cve']]);
                 if ($currentCve) {
                     if (
-                        strtolower($currentCve->getAnalysisStatus()) !== "analysis completed"
+                        trim(strtolower($currentCve->getAnalysisStatus())) !== "analysis completed"
                     ) {
                         $this->_updateCve($currentCve, $cveColsData);
                         $updated[$cpe][] = $cveColsData;
