@@ -60,23 +60,16 @@ class NVDController extends AbstractController
                 /** @var Cve $currentCve */
                 $currentCve = $this->entityManager->getRepository(Cve::class)->findOneBy(['cve' => $cveColsData['cve']]);
                 if ($currentCve) {
-                    $currentCveArray = (array)$currentCve;
-                    if ($this->_isKernel($currentCveArray)) {
-                        $kernel['update'][] = $cveColsData;
-                    } else if ($this->_isOthers($currentCveArray)) {
-                        $others['update'][] = $cveColsData;
-                    }
                     if (
-                        empty($cveColsData['analysis_status']) &&
-                        empty($cveColsData['analysis_date']) &&
-                        empty($cveColsData['applicability_status']) &&
-                        empty($cveColsData['applicability_rationale']) &&
-                        empty($cveColsData['consequence']) &&
-                        empty($cveColsData['operational_impact_level']) &&
-                        empty($cveColsData['cve_condition']) &&
-                        empty($cveColsData['exploit_likelihood'])
+                        strtolower($currentCve->getAnalysisStatus()) !== "analysis completed"
                     ) {
-                        $this->_updateCve($currentCve, $cveColsData);
+                        if ($this->_isKernel($cveColsData)) {
+                            $kernel['update'][] = $cveColsData;
+                            $this->_updateCve($currentCve, $cveColsData);
+                        } else if ($this->_isOthers($cveColsData)) {
+                            $others['update'][] = $cveColsData;
+                            $this->_updateCve($currentCve, $cveColsData);
+                        }
                     }
                 } else {
                     if ($this->_isKernel($cveColsData)) {
@@ -90,19 +83,24 @@ class NVDController extends AbstractController
         }
         $message = "";
         $cvesTypes = ['kernel' => $kernel, 'others' => $others];
+        $counter = 0;
         foreach ($cvesTypes as $cvesType) {
-            foreach ($cvesType as $cveStatus => $cve) {
-                if (is_array($cve) && isset($cve['matching'])) {
-                    $version = explode(':', $cve['matching'])[5];
-                    $currentMessage = "A vulnerability $cveStatus detected : $cve[cve] on the $cve[cots] $version with severity Score $cve[base_score]<br>";
-                    $message .= $currentMessage;
-                    $this->_sendEmail("[$cve[cve]] A vulnerability $cveStatus detected", $currentMessage);
+            foreach ($cvesType as $cveStatus => $cves) {
+                if (is_array($cves) && count($cves)) {
+                    foreach ($cves as $cve) {
+                        $counter++;
+                        $version = isset($cve['matching']) ? explode(':', $cve['matching'])[5] : 'N/A';
+                        $cveText = $cve['cve'] ?? 'N/A';
+                        $cotsText = $cve['cots'] ?? 'N/A';
+                        $baseScoreText = $cve['base_score'] ?? 'N/A';
+                        $currentMessage = "A vulnerability $cveStatus detected : $cveText on the $cotsText $version with severity Score $baseScoreText\n\n";
+                        $message .= $currentMessage;
+                    }
                 }
             }
         }
-        if (!empty(trim($message))) {
-            $this->session->getFlashBag()->add('success', $message);
-        }
+        $this->_sendEmail("$counter Vulnerabilities detected", $message);
+        $this->session->getFlashBag()->add('success', str_replace("\n", "<br>", $message));
         return $this->redirectToRoute('admin');
     }
 
@@ -188,28 +186,24 @@ class NVDController extends AbstractController
 
     private function _isKernel($cve): bool
     {
-        if (!isset($cve['analysis_status']) || ($cve['analysis_status'] != 'Analysis complete')) {
-            if (
-                isset($cve['matching']) && (trim($cve['matching']) == "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
-                isset($cve['base_score']) && ($cve['base_score'] >= 7) &&
-                isset($cve['cve_description']) && (str_contains($cve['cve_description'], 'usb')) &&
-                isset($cve['attack_vector']) && (str_contains($cve['attack_vector'], 'Network') || str_contains($cve['attack_vector'], 'Adjacent'))
-            ) {
-                return true;
-            }
+        if (
+            isset($cve['matching']) && (trim($cve['matching']) == "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
+            isset($cve['base_score']) && ($cve['base_score'] >= 7) &&
+            isset($cve['cve_description']) && (str_contains($cve['cve_description'], 'usb')) &&
+            isset($cve['attack_vector']) && (str_contains($cve['attack_vector'], 'Network') || str_contains($cve['attack_vector'], 'Adjacent'))
+        ) {
+            return true;
         }
         return false;
     }
 
     private function _isOthers($cve): bool
     {
-        if (!isset($cve['analysis_status']) || ($cve['analysis_status'] != 'Analysis complete')) {
-            if (
-                isset($cve['matching']) && (trim($cve['matching']) != "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
-                isset($cve['base_score']) && ($cve['base_score'] >= 7)
-            ) {
-                return true;
-            }
+        if (
+            isset($cve['matching']) && (trim($cve['matching']) != "cpe:2.3:o:linux:linux_kernel:5.4.2:*:*:*:*:*:*:*") &&
+            isset($cve['base_score']) && ($cve['base_score'] >= 7)
+        ) {
+            return true;
         }
         return false;
     }
@@ -243,14 +237,7 @@ class NVDController extends AbstractController
                 $currentCve = $this->entityManager->getRepository(Cve::class)->findOneBy(['cve' => $cveColsData['cve']]);
                 if ($currentCve) {
                     if (
-                        empty($cveColsData['analysis_status']) &&
-                        empty($cveColsData['analysis_date']) &&
-                        empty($cveColsData['applicability_status']) &&
-                        empty($cveColsData['applicability_rationale']) &&
-                        empty($cveColsData['consequence']) &&
-                        empty($cveColsData['operational_impact_level']) &&
-                        empty($cveColsData['cve_condition']) &&
-                        empty($cveColsData['exploit_likelihood'])
+                        strtolower($currentCve->getAnalysisStatus()) !== "analysis completed"
                     ) {
                         $this->_updateCve($currentCve, $cveColsData);
                         $updated[$cpe][] = $cveColsData;

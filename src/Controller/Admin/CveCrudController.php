@@ -29,14 +29,10 @@ class CveCrudController extends AbstractCrudController
     {
         $fields = $this->entityManager->getRepository(Field::class)->findAll();
         foreach ($fields as $index => $field) {
-            if ($index < 5) yield TextField::new($field->getName())
+            yield TextField::new($field->getName())
                 ->setLabel($field->getLabel())
-                ->setSortable(true)
+                ->setSortable(false)
                 ->setTextAlign('center');
-            else yield TextField::new($field->getName())
-                ->setLabel($field->getLabel())
-                ->setSortable(true)
-                ->setTextAlign('center')->hideOnIndex();
         }
     }
 
