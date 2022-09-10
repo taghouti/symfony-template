@@ -47,8 +47,26 @@ class NVDController extends AbstractController
     }
 
     #[Route('/nvd/check', name: 'nvd_check')]
-    public function check(): RedirectResponse
+    public function check($cli = false)
     {
+        $configDays = $this->configs[7]->getConfigValue();
+        if (str_contains($configDays, ',')) {
+            $configDays = explode(",", $configDays);
+        } else {
+            $configDays = [$configDays];
+        }
+        $days = [];
+        foreach ($configDays as $configDay) {
+            if (is_numeric($configDay)) {
+                $configDay = (int) $configDay;
+                if ($configDay > 0 && $configDay < 8) {
+                    $days[] = $configDay;
+                }
+            }
+        }
+        $today = date('N', time()) + 1;
+        if (count($days) && !in_array($today, $days))
+        die('Not allowed to be executed right now');
         $cpeList = $this->entityManager->getRepository(Cpe::class)->findAll();
         $cpesCves = $this->_parseCpes($cpeList)['parsed'];
         $kernel['creation'] = [];
@@ -101,6 +119,9 @@ class NVDController extends AbstractController
         }
         $this->_sendEmail("$counter Vulnerabilities detected", $message);
         $this->session->getFlashBag()->add('success', str_replace("\n", "<br>", $message));
+        if ($cli) {
+            return $message;
+        }
         return $this->redirectToRoute('admin');
     }
 
