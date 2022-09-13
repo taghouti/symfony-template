@@ -55,7 +55,9 @@ final class Version20220605162859 extends AbstractMigration
             operational_impact_level     text null,
             cve_condition                text null,
             exploit_likelihood           text null,
-            exploit_likelihood_rationale text null
+            exploit_likelihood_rationale text null,
+            created DATETIME NOT NULL, 
+            updated DATETIME NOT NULL
         );");
 
         $this->addSql("create table export
