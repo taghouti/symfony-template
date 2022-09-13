@@ -71,8 +71,10 @@ class NVDController extends AbstractController
         $cpesCves = $this->_parseCpes($cpeList)['parsed'];
         $kernel['creation'] = [];
         $kernel['update'] = [];
+        $kernel['analysed'] = [];
         $others['creation'] = [];
         $others['update'] = [];
+        $others['analysed'] = [];
         foreach ($cpesCves as $cpeCves) {
             foreach ($cpeCves as $cveColsData) {
                 /** @var Cve $currentCve */
@@ -86,6 +88,17 @@ class NVDController extends AbstractController
                             $this->_updateCve($currentCve, $cveColsData);
                         } else if ($this->_isOthers($cveColsData)) {
                             $others['update'][] = $cveColsData;
+                            $this->_updateCve($currentCve, $cveColsData);
+                        }
+                    } else {
+                        $isNew = (
+                            strtotime($currentCve->getUpdated()->format('y-m-d H:m')) < strtotime(date('y-m-d H:m', strtotime($cveColsData['lastModifiedDate'])))
+                        );
+                        if ($this->_isKernel($cveColsData) && $isNew) {
+                            $kernel['analysed'][] = $cveColsData;
+                            $this->_updateCve($currentCve, $cveColsData);
+                        } else if ($this->_isOthers($cveColsData) && $isNew) {
+                            $others['analysed'][] = $cveColsData;
                             $this->_updateCve($currentCve, $cveColsData);
                         }
                     }
@@ -104,6 +117,7 @@ class NVDController extends AbstractController
         $counter = 0;
         foreach ($cvesTypes as $cvesType) {
             foreach ($cvesType as $cveStatus => $cves) {
+                if ($cveStatus == 'analysed') continue;
                 if (is_array($cves) && count($cves)) {
                     foreach ($cves as $cve) {
                         $counter++;
@@ -118,6 +132,25 @@ class NVDController extends AbstractController
             }
         }
         $this->_sendEmail("$counter Vulnerabilities detected", $message);
+        $this->session->getFlashBag()->add('success', str_replace("\n", "<br>", $message));
+
+        $message = "";
+        $cvesTypes = ['kernel' => $kernel['analysed'], 'others' => $others['analysed']];
+        $counter = 0;
+        foreach ($cvesTypes as $cves) {
+            if (is_array($cves) && count($cves)) {
+                foreach ($cves as $cve) {
+                    $counter++;
+                    $version = isset($cve['matching']) ? explode(':', $cve['matching'])[5] : 'N/A';
+                    $cveText = $cve['cve'] ?? 'N/A';
+                    $cotsText = $cve['cots'] ?? 'N/A';
+                    $baseScoreText = $cve['base_score'] ?? 'N/A';
+                    $currentMessage = "An analysed vulnerability has been updated : $cveText on the $cotsText $version with severity Score $baseScoreText\n\n";
+                    $message .= $currentMessage;
+                }
+            }
+        }
+        $this->_sendEmail("$counter Analysed vulnerabilities updated", $message);
         $this->session->getFlashBag()->add('success', str_replace("\n", "<br>", $message));
         if ($cli) {
             return $message;
@@ -161,6 +194,8 @@ class NVDController extends AbstractController
                         "base_score" => $cve['impact']["baseMetricV$version"]["cvssV$version"]['baseScore'],
                         "matching" => $cpe,
                         "cots" => explode(':', $cpe)[4],
+                        "publishedDate" => $cve['publishedDate'],
+                        "lastModifiedDate" => $cve['lastModifiedDate'],
                     ];
                 } catch (TypeError $e) {
                     $errors[$cve->getCve()] = $e->getMessage();
