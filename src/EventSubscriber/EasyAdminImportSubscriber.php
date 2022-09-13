@@ -71,6 +71,7 @@ class EasyAdminImportSubscriber implements EventSubscriberInterface
         $deleteQuery = "";
         $query = "INSERT INTO cve VALUES ";
         $queries = [];
+        $dateTime = date('y-m-d h:i:s');
         foreach ($sheetData as $rowIndex => $currentRow)
         {
             if ($rowIndex == 1) continue;
@@ -79,7 +80,7 @@ class EasyAdminImportSubscriber implements EventSubscriberInterface
             foreach ($fields as $index => $field) {
                 $currentQuery .= ",'" . str_replace("'", "\'", $currentRow[chr($index + 65)]) . "'";
             }
-            $currentQuery .= " ) ";
+            $currentQuery .= ", '$dateTime', '$dateTime' ) ";
             $queries[] = $currentQuery;
             $deleteQuery .= "DELETE FROM cve WHERE cve='" . str_replace("'", "\'", $currentRow[chr(  65)]) . "';";
         }

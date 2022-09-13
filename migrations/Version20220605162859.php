@@ -56,8 +56,8 @@ final class Version20220605162859 extends AbstractMigration
             cve_condition                text null,
             exploit_likelihood           text null,
             exploit_likelihood_rationale text null,
-            created DATETIME DEFAULT CURRENT_TIMESTAMP, 
-            updated DATETIME DEFAULT CURRENT_TIMESTAMP
+            created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+            updated DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         );");
 
         $this->addSql("create table export
